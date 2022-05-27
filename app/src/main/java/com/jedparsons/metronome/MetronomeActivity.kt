@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -37,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.jedparsons.metronome.BeatsPerMinuteViewModel.Companion.DEFAULT_BPM
 import com.jedparsons.metronome.player.MetronomePlayer
 import com.jedparsons.metronome.ui.theme.Amber
 import com.jedparsons.metronome.ui.theme.DarkAmber
@@ -45,6 +47,10 @@ import java.util.Timer
 import java.util.TimerTask
 
 class MetronomeActivity : ComponentActivity() {
+
+  private val beatsPerMinuteViewModel: BeatsPerMinuteViewModel by viewModels()
+  private val playButtonViewModel: PlayButtonViewModel by viewModels()
+  private val subdivisionsViewModel: SubdivisionsViewModel by viewModels()
 
   private var metronomePlayer = MetronomePlayer()
 
@@ -55,9 +61,8 @@ class MetronomeActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    val beatsPerMinuteViewModel = BeatsPerMinuteViewModel()
-    val playButtonViewModel = PlayButtonViewModel()
-    val subdivisionsViewModel = SubdivisionsViewModel()
+    restoreState()
+
     val metronomeController = MetronomeController(metronomePlayer)
 
     setContent {
@@ -76,14 +81,14 @@ class MetronomeActivity : ComponentActivity() {
       }
     }
 
+    // Let the metronome controller directly observe the viewmodels' states.
+    // The audio player is like another output device coupled to the UI.
     beatsPerMinuteViewModel.bpm.observe(this) {
       metronomeController.bpm = it
     }
-
     playButtonViewModel.playing.observe(this) { play ->
       if (play) metronomeController.start() else metronomeController.stop()
     }
-
     subdivisionsViewModel.values.observe(this) {
       metronomeController.subdivisions = it
     }
@@ -103,11 +108,39 @@ class MetronomeActivity : ComponentActivity() {
     metronomePlayer.unloadWavAssets()
     Log.i(TAG, "Cleaned up audio stream")
 
+    saveState()
+
     super.onStop()
+  }
+
+  private fun saveState() {
+    // Stash bpm and divisions in shared prefs. Easy peasy.
+    val sharedPref = getPreferences(MODE_PRIVATE)
+    with(sharedPref.edit()) {
+      putInt(BPM_KEY, beatsPerMinuteViewModel.bpm.value ?: DEFAULT_BPM)
+      // Serialize the list of ints to a string like "1,2,3".
+      putString(DIV_KEY, subdivisionsViewModel.values.value?.joinToString(",") ?: "1,0")
+      commit()
+    }
+  }
+
+  private fun restoreState() {
+    // Restore bpm and divisions from shared prefs.
+    val sharedPref = getPreferences(MODE_PRIVATE)
+    beatsPerMinuteViewModel.updateBPM(sharedPref.getInt(BPM_KEY, DEFAULT_BPM))
+    // Convert a string like "1,2,3" back to a list of ints.
+    subdivisionsViewModel.updateValues(
+      sharedPref.getString(DIV_KEY, "1,0")!!
+        .split(",")
+        .map { s -> s.toInt() }
+        .toList()
+    )
   }
 
   companion object {
     const val TAG = "MetronomeActivity"
+    const val BPM_KEY = "bpm"
+    const val DIV_KEY = "div"
   }
 }
 
@@ -198,7 +231,7 @@ class BeatsPerMinuteViewModel : ViewModel() {
     lastTap = now
   }
 
-  private fun updateBPM(value: Int) {
+  fun updateBPM(value: Int) {
     _bpm.value = value.coerceIn(MIN_BPM, MAX_BPM)
   }
 
@@ -231,6 +264,10 @@ class SubdivisionsViewModel : ViewModel() {
     }
   }
 
+  fun updateValues(values: List<Int>) {
+    _values.value = values
+  }
+
   private fun updateValue(
     item: Int,
     value: Int
@@ -252,7 +289,7 @@ class SubdivisionsViewModel : ViewModel() {
     if (item == temp.size - 1 && temp[item] != 0) {
       temp.add(0)
     }
-    _values.value = temp
+    updateValues(temp)
   }
 
   companion object {

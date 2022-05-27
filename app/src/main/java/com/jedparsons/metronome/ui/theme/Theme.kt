@@ -1,6 +1,5 @@
 package com.jedparsons.metronome.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.darkColors
 import androidx.compose.runtime.Composable
@@ -17,11 +16,7 @@ val DarkColorPalette = darkColors(
 )
 
 @Composable
-fun MetronomeTheme(
-  darkTheme: Boolean = isSystemInDarkTheme(),
-  content: @Composable () -> Unit
-) {
-
+fun MetronomeTheme(content: @Composable () -> Unit) {
   MaterialTheme(
     colors = DarkColorPalette,
     typography = Typography,
