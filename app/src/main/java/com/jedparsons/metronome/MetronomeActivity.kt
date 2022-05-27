@@ -61,8 +61,6 @@ class MetronomeActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    restoreState()
-
     val metronomeController = MetronomeController(metronomePlayer)
 
     setContent {
@@ -103,12 +101,22 @@ class MetronomeActivity : ComponentActivity() {
     Log.i(TAG, "Prepared audio stream")
   }
 
+  override fun onResume() {
+    super.onResume()
+
+    restoreState()
+  }
+
+  override fun onPause() {
+    saveState()
+
+    super.onPause()
+  }
+
   override fun onStop() {
     metronomePlayer.teardownAudioStream()
     metronomePlayer.unloadWavAssets()
     Log.i(TAG, "Cleaned up audio stream")
-
-    saveState()
 
     super.onStop()
   }
