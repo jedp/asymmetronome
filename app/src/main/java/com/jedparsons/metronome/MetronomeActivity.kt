@@ -34,6 +34,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.toUpperCase
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LiveData
@@ -46,6 +47,7 @@ import com.jedparsons.metronome.ui.theme.DarkAmber
 import com.jedparsons.metronome.ui.theme.MetronomeTheme
 import java.util.Timer
 import java.util.TimerTask
+import kotlin.math.abs
 
 class MetronomeActivity : ComponentActivity() {
 
@@ -264,16 +266,10 @@ class SubdivisionsViewModel : ViewModel() {
 
   val values: LiveData<List<Int>> = _values
 
-  fun onDrag(
+  fun incrementItemValueBy(
     item: Int,
-    offset: Offset
-  ) {
-    if (offset.x < -5) {
-      updateValue(item, _values.value?.let { it[item] - 1 } ?: MIN)
-    } else if (offset.x > 5) {
-      updateValue(item, _values.value?.let { it[item] + 1 } ?: MIN)
-    }
-  }
+    newValue: Int
+  ) = updateValue(item, _values.value?.let { it[item] + newValue } ?: 0)
 
   fun updateValues(values: List<Int>) {
     _values.value = values
@@ -363,7 +359,7 @@ fun MetronomeScreen(
     )
     SubdivisionsContent(
       divisions = subdivisions,
-      onDrag = subdivisionsViewModel::onDrag
+      incrementItemValueBy = subdivisionsViewModel::incrementItemValueBy
     )
     TappableButton(
       text = stringResource(if (playing) R.string.stop else R.string.start)
@@ -446,19 +442,45 @@ fun TappableButton(
 @Composable
 fun SubdivisionsContent(
   divisions: List<Int>,
-  onDrag: (item: Int, offset: Offset) -> Unit
+  incrementItemValueBy: (item: Int, newValue: Int) -> Unit
 ) {
   LazyRow(
     verticalAlignment = Alignment.CenterVertically
   ) {
     itemsIndexed(divisions) { i, beats ->
+      val dragHandler = HorizontalDragHandler(incrementValueBy = {
+        incrementItemValueBy(i, it)
+      })
+
       SubdivisionContent(
         beats = beats,
         isLast = i == divisions.size - 1,
-        onDrag = { offset ->
-          onDrag(i, offset)
-        }
+        onDragStart = dragHandler::onDragStart,
+        onDrag = dragHandler::onDrag
       )
+    }
+  }
+}
+
+class HorizontalDragHandler(
+  private val dpPerUnit: Int = 20,
+  private val incrementValueBy: (Int) -> Unit
+) {
+
+  private var currentOffset: Dp = 0.dp
+  private var lastOffset: Dp = 0.dp
+
+  fun onDragStart(offset: Offset) {
+    currentOffset = 0.dp
+    lastOffset = 0.dp
+  }
+
+  fun onDrag(offset: Offset) {
+    currentOffset += offset.x.dp
+
+    if (abs(currentOffset.value - lastOffset.value) > dpPerUnit) {
+      incrementValueBy(if (currentOffset < lastOffset) -1 else 1)
+      lastOffset = currentOffset
     }
   }
 }
@@ -472,12 +494,15 @@ fun SubdivisionsContent(
 fun SubdivisionContent(
   beats: Int,
   isLast: Boolean,
-  onDrag: (offset: Offset) -> Unit
+  onDragStart: (Offset) -> Unit,
+  onDrag: (Offset) -> Unit
 ) {
   Box(
     Modifier
       .pointerInput(Unit) {
-        detectDragGestures { _, offset ->
+        detectDragGestures(
+          onDragStart = { offset -> onDragStart(offset) }
+        ) { _, offset ->
           onDrag(offset)
         }
       }
