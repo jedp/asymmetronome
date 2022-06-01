@@ -2,6 +2,7 @@ package com.jedparsons.metronome
 
 import android.os.Bundle
 import android.util.Log
+import android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -90,6 +91,8 @@ class MetronomeActivity : ComponentActivity() {
     subdivisionsViewModel.values.observe(this) {
       metronomeController.subdivisions = it
     }
+
+    window.addFlags(FLAG_KEEP_SCREEN_ON)
   }
 
   override fun onStart() {
