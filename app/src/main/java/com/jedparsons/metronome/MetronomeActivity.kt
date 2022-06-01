@@ -34,7 +34,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.toUpperCase
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LiveData
@@ -47,7 +46,6 @@ import com.jedparsons.metronome.ui.theme.DarkAmber
 import com.jedparsons.metronome.ui.theme.MetronomeTheme
 import java.util.Timer
 import java.util.TimerTask
-import kotlin.math.abs
 
 class MetronomeActivity : ComponentActivity() {
 
@@ -232,9 +230,8 @@ class BeatsPerMinuteViewModel : ViewModel() {
 
   val bpm: LiveData<Int> = _bpm
 
-  fun onDrag(offset: Offset) {
-    val increment = if (offset.x < 0) -1 else 1
-    updateBPM((_bpm.value ?: DEFAULT_BPM) + increment)
+  fun incrementValueBy(newValue: Int) {
+    updateBPM((_bpm.value ?: DEFAULT_BPM) + newValue)
   }
 
   fun onTap() {
@@ -351,7 +348,7 @@ fun MetronomeScreen(
   ) {
     BeatsPerMinuteContent(
       beatsPerMinute = bpm,
-      onDrag = beatsPerMinuteViewModel::onDrag
+      incrementValueBy = beatsPerMinuteViewModel::incrementValueBy
     )
     TappableButton(
       text = stringResource(R.string.tap).toUpperCase(Locale.current),
@@ -375,14 +372,20 @@ fun MetronomeScreen(
 @Composable
 fun BeatsPerMinuteContent(
   beatsPerMinute: Int,
-  onDrag: (offset: Offset) -> Unit
+  incrementValueBy: (newValue: Int) -> Unit
 ) {
+  val horizontalDragHandler = HorizontalDragHandler(
+    dpPerUnit = 10,
+    incrementValueBy = incrementValueBy
+  )
   Box(
     Modifier
-      .width(330.dp)
+      .width(335.dp)
       .pointerInput(Unit) {
-        detectDragGestures { _, offset ->
-          onDrag(offset)
+        detectDragGestures(
+          onDragStart = horizontalDragHandler::onDragStart
+        ) { _, offset ->
+          horizontalDragHandler.onDrag(offset)
         }
       },
     contentAlignment = Alignment.CenterStart
@@ -458,29 +461,6 @@ fun SubdivisionsContent(
         onDragStart = dragHandler::onDragStart,
         onDrag = dragHandler::onDrag
       )
-    }
-  }
-}
-
-class HorizontalDragHandler(
-  private val dpPerUnit: Int = 20,
-  private val incrementValueBy: (Int) -> Unit
-) {
-
-  private var currentOffset: Dp = 0.dp
-  private var lastOffset: Dp = 0.dp
-
-  fun onDragStart(offset: Offset) {
-    currentOffset = 0.dp
-    lastOffset = 0.dp
-  }
-
-  fun onDrag(offset: Offset) {
-    currentOffset += offset.x.dp
-
-    if (abs(currentOffset.value - lastOffset.value) > dpPerUnit) {
-      incrementValueBy(if (currentOffset < lastOffset) -1 else 1)
-      lastOffset = currentOffset
     }
   }
 }
