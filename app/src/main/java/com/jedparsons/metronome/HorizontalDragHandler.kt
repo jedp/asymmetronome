@@ -9,7 +9,7 @@ import kotlin.math.abs
  * Utility to convert UI drag offset to single unit increments / decrements.
  */
 class HorizontalDragHandler(
-  private val dpPerUnit: Int = 20,
+  private val dpPerUnit: Int = 35,
   private val incrementValueBy: (Int) -> Unit
 ) {
 

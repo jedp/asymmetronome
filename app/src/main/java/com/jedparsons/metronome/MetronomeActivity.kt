@@ -257,7 +257,9 @@ class BeatsPerMinuteViewModel : ViewModel() {
  *
  * Enforces: First element can never be less than 1. Last element must always be 0.
  */
-class SubdivisionsViewModel : ViewModel() {
+class SubdivisionsViewModel(
+  private val maxSubdivisions: Int = 4
+) : ViewModel() {
 
   private val _values: MutableLiveData<List<Int>> = MutableLiveData(listOf(1, 0))
 
@@ -290,7 +292,7 @@ class SubdivisionsViewModel : ViewModel() {
       }
     }
 
-    if (item == temp.size - 1 && temp[item] != 0) {
+    if (temp.size < maxSubdivisions && item == temp.size - 1 && temp[item] != 0) {
       temp.add(0)
     }
     updateValues(temp)
@@ -380,7 +382,7 @@ fun BeatsPerMinuteContent(
   )
   Box(
     Modifier
-      .width(335.dp)
+      .width(350.dp)
       .pointerInput(Unit) {
         detectDragGestures(
           onDragStart = horizontalDragHandler::onDragStart
@@ -392,7 +394,7 @@ fun BeatsPerMinuteContent(
   ) {
     Text(
       text = beatsPerMinute.toString(),
-      fontSize = 160.sp,
+      fontSize = 150.sp,
       style = MaterialTheme.typography.h1,
     )
   }
