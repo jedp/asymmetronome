@@ -2,12 +2,14 @@
 
 ## Features
 
-- A useful metronome
+- A useful metronome for iOS or Android
 - Tap to set tempo
 - Drag to change tempo
 - Fancy ability to subdivide rhythm (Bartok mode: e.g., 4 + 2 + 3)
 
-![Screenshot](metronome.png)
+![Screenshot](metronome-android.png)
+
+![Screenshot](metronome-ios.png)
 
 ## License
 
