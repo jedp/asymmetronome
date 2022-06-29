@@ -33,31 +33,49 @@ class RealMetronomePlayer: MetronomePlayer, ObservableObject {
     
     private var player: AVAudioPlayer?
     private var cancellable: AnyCancellable?
-    private var lastTick: Double = 0
+    private var lastBeat: Double = 0
+    private var emphasisPattern: [Int] = [1]
+    private var currentEmphasis: Int = 0
     private var timer: Timer?
     
-    var bpm: Int
+    var bpm: Double // Store as a double to avoid casting on every use.
     var playing: Bool
     
     init(_ data: MetronomeModel) {
         self.data = data
         
-        self.bpm = data.bpm
+        self.bpm = Double(data.bpm)
         self.playing = data.playing
         
         self.data.onPlayingChanged.sink(receiveValue: { playing in
-            if (self.player != nil) {
-                self.playing = playing
-            }
+            self.playing = playing
         }).store(in: &cancellableBag)
         
         self.data.onBpmChanged.sink(receiveValue: {bpm in
-            self.bpm = bpm
+            self.bpm = Double(bpm)
+        }).store(in: &cancellableBag)
+
+        self.data.onDivisionsChanged.sink(receiveValue: {divisions in
+            var newPattern: [Int] = []
+            divisions
+                .filter{$0 > 0}
+                .forEach { value in
+                    for i in 0..<value {
+                        newPattern.append((i == 0) ? 1 : 0)
+                    }
+                }
+            self.emphasisPattern = newPattern
         }).store(in: &cancellableBag)
         
         initAudio()
     }
     
+    deinit {
+        for cancellable in cancellableBag {
+            cancellable.cancel()
+        }
+    }
+
     func start() {
         timer = Timer.scheduledTimer(withTimeInterval: 0.001, repeats: true) {_ in
             if (self.playing) {
@@ -72,12 +90,19 @@ class RealMetronomePlayer: MetronomePlayer, ObservableObject {
     
     private func tick() {
         let now = Date().timeIntervalSince1970
-        if (lastTick == 0) {
-            lastTick = now
-        } else if ((now - lastTick) >= 60 / Double(bpm)) {
+        if (lastBeat == 0) {
+            lastBeat = now
+        } else if ((now - lastBeat) >= (60 / bpm)) {
             player?.currentTime = 0
             player?.play()
-            lastTick = now
+            lastBeat = now
+
+            // Stress the beat according the the emphasis pattern.
+            if (currentEmphasis >= emphasisPattern.count) {
+                currentEmphasis = 0
+            }
+            player?.volume = (emphasisPattern[currentEmphasis] == 1) ? 1 : 0.2
+            currentEmphasis += 1
         }
     }
     
