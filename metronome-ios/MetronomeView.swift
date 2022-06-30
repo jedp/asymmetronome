@@ -24,6 +24,7 @@ struct MetronomeView: View {
     var body: some View {
         Color.black.overlay {
             VStack(spacing: 1) {
+                Spacer()
                 BeatsPerMinute(bpm: metronome.bpm, setTempo: metronome.setTempo)
                 Spacer()
                 TempoTapButton(tapToSetTempo: metronome.tapToSetTempo)
@@ -31,9 +32,11 @@ struct MetronomeView: View {
                 Subdivisions(divisions: metronome.divisions, setSubdivisions: metronome.setSubdivisions)
                 Spacer()
                 PlayButton(playing: metronome.playing, togglePlaying: metronome.togglePlaying)
+                Spacer()
             }
         }
         .background(.black)
+        .preferredColorScheme(.dark)
         .foregroundColor(.orange)
         .padding()
     }

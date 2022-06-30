@@ -42,7 +42,6 @@ class MetronomeViewModel: ObservableObject {
             // Reset if it's been a while since they tapped.
             if (delta > 10) {
                 data.setTempo(Int(delta))
-                print("set bpm to \(data.bpm)")
             }
             lastTap = now
         }
