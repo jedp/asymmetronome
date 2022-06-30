@@ -22,15 +22,20 @@ struct MetronomeView: View {
     @ObservedObject var metronome: MetronomeViewModel
     
     var body: some View {
-        VStack() {
-            BeatsPerMinute(bpm: metronome.bpm, setTempo: metronome.setTempo)
-            TempoTapButton(tapToSetTempo: metronome.tapToSetTempo)
-            Subdivisions(divisions: metronome.divisions, setSubdivisions: metronome.setSubdivisions)
-            PlayButton(playing: metronome.playing, togglePlaying: metronome.togglePlaying)
-            Color.black.edgesIgnoringSafeArea(.all)
+        Color.black.overlay {
+            VStack(spacing: 1) {
+                BeatsPerMinute(bpm: metronome.bpm, setTempo: metronome.setTempo)
+                Spacer()
+                TempoTapButton(tapToSetTempo: metronome.tapToSetTempo)
+                Spacer()
+                Subdivisions(divisions: metronome.divisions, setSubdivisions: metronome.setSubdivisions)
+                Spacer()
+                PlayButton(playing: metronome.playing, togglePlaying: metronome.togglePlaying)
+            }
         }
         .background(.black)
         .foregroundColor(.orange)
+        .padding()
     }
 }
 
