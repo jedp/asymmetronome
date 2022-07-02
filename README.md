@@ -9,8 +9,8 @@ Asymmetric metronome.
 - Subdivide rhythm into groups of beats (aka Bartok mode: e.g., 4 + 2 + 3).
 - For iOS or Android.
 
-I wrote this app to help practice the six Hungarian Pieces in Bulgarian Rhythm
-at the end of Book 6 of the Mikrokosmos, by Bartok:
+I wrote this app to help practice the Six Dances in Bulgarian Rhythm at the end
+of Book 6 of the Mikrokosmos, by Bartok:
 
 ![A Bulgarian Rhythm by Bartok](bulgarian-rhythm.jpg)
 
