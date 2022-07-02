@@ -66,8 +66,6 @@ class RealMetronomePlayer: MetronomePlayer, ObservableObject {
                 }
             self.emphasisPattern = newPattern
         }).store(in: &cancellableBag)
-        
-        initAudio()
     }
     
     deinit {
@@ -77,6 +75,7 @@ class RealMetronomePlayer: MetronomePlayer, ObservableObject {
     }
 
     func start() {
+        initAudio()
         timer = Timer.scheduledTimer(withTimeInterval: 0.001, repeats: true) {_ in
             if (self.playing) {
                 self.tick()

@@ -18,12 +18,14 @@ struct metronomeApp: App {
         metronomeModel = MetronomeModel()
         metronomeViewModel = MetronomeViewModel(metronomeModel)
         metronomePlayer = RealMetronomePlayer(metronomeModel)
-        metronomePlayer.start()
     }
     
     var body: some Scene {
         WindowGroup {
             MetronomeView(metronome: metronomeViewModel)
+                .onAppear {
+                    metronomePlayer.start()
+                }
         }
     }
 }
