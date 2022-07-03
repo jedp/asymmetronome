@@ -1,5 +1,5 @@
 <resources>
-  <string name="app_name">Metronome</string>
+  <string name="app_name">Asymmetronome</string>
   <string name="start">Play</string>
   <string name="stop">Stop</string>
   <string name="tap">Tap</string>
