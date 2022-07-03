@@ -47,7 +47,7 @@ struct MetronomeModel {
     
     /// Set the tempo in beats per minute.
     mutating func setTempo(_ bpm: Int) {
-        self.bpm = bpm.clamp(30...350)
+        self.bpm = bpm.clamp(30...500)
     }
 
     /// Set the subdivisions of the specified `group` to the given number of `beats`.
