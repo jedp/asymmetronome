@@ -382,15 +382,13 @@ fun BeatsPerMinuteContent(
   )
   Box(
     Modifier
-      .width(350.dp)
       .pointerInput(Unit) {
         detectDragGestures(
           onDragStart = horizontalDragHandler::onDragStart
         ) { _, offset ->
           horizontalDragHandler.onDrag(offset)
         }
-      },
-    contentAlignment = Alignment.CenterStart
+      }
   ) {
     Text(
       text = beatsPerMinute.toString(),
