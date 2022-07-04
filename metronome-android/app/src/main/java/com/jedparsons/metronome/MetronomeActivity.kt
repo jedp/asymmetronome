@@ -12,11 +12,13 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.forEachGesture
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -53,7 +55,8 @@ class MetronomeActivity : ComponentActivity() {
   private val playButtonViewModel: PlayButtonViewModel by viewModels()
   private val subdivisionsViewModel: SubdivisionsViewModel by viewModels()
 
-  private var metronomePlayer = MetronomePlayer()
+  private val metronomePlayer = MetronomePlayer()
+  private val metronomeController = MetronomeController(metronomePlayer)
 
   init {
     System.loadLibrary("metronome")
@@ -62,7 +65,6 @@ class MetronomeActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    val metronomeController = MetronomeController(metronomePlayer)
 
     setContent {
       MetronomeTheme {
@@ -117,6 +119,7 @@ class MetronomeActivity : ComponentActivity() {
   }
 
   override fun onStop() {
+    metronomeController.stop()
     metronomePlayer.teardownAudioStream()
     metronomePlayer.unloadWavAssets()
     Log.i(TAG, "Cleaned up audio stream")
@@ -343,28 +346,92 @@ fun MetronomeScreen(
   val playing: Boolean by playButtonViewModel.playing.observeAsState(initial = false)
   val subdivisions: List<Int> by subdivisionsViewModel.values.observeAsState(initial = listOf(1, 0))
 
-  Column(
-    Modifier.fillMaxHeight(),
-    verticalArrangement = Arrangement.SpaceEvenly,
-    horizontalAlignment = Alignment.CenterHorizontally
+  BoxWithConstraints(
+    contentAlignment = Alignment.Center
   ) {
-    BeatsPerMinuteContent(
-      beatsPerMinute = bpm,
-      incrementValueBy = beatsPerMinuteViewModel::incrementValueBy
-    )
-    TappableButton(
-      text = stringResource(R.string.tap).toUpperCase(Locale.current),
-      onTap = beatsPerMinuteViewModel::onTap
-    )
-    SubdivisionsContent(
-      divisions = subdivisions,
-      incrementItemValueBy = subdivisionsViewModel::incrementItemValueBy
-    )
-    TappableButton(
-      text = stringResource(if (playing) R.string.stop else R.string.start)
-        .toUpperCase(Locale.current),
-      onTap = playButtonViewModel::onClick
-    )
+    if (maxWidth < 400.dp) {
+      // Portrait: Single column.
+      Column(
+        Modifier.fillMaxHeight(),
+        verticalArrangement = Arrangement.SpaceEvenly,
+        horizontalAlignment = Alignment.CenterHorizontally
+      ) {
+        BeatsPerMinuteContent(
+          beatsPerMinute = bpm,
+          incrementValueBy = beatsPerMinuteViewModel::incrementValueBy
+        )
+        TappableButton(
+          text = stringResource(R.string.tap).toUpperCase(Locale.current),
+          onTap = beatsPerMinuteViewModel::onTap
+        )
+        SubdivisionsContent(
+          divisions = subdivisions,
+          incrementItemValueBy = subdivisionsViewModel::incrementItemValueBy
+        )
+        TappableButton(
+          text = stringResource(if (playing) R.string.stop else R.string.start)
+            .toUpperCase(Locale.current),
+          onTap = playButtonViewModel::onClick
+        )
+      }
+    } else {
+      // Landscape: Two columns.
+      Row(
+        Modifier.fillMaxSize(),
+        Arrangement.SpaceEvenly
+      ) {
+        Box(
+          Modifier
+            .fillMaxHeight()
+            .weight(1f),
+          contentAlignment = Alignment.Center
+        ) {
+          Column(
+            Modifier
+              .fillMaxHeight()
+              .padding(20.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.CenterHorizontally
+          ) {
+            BeatsPerMinuteContent(
+              beatsPerMinute = bpm,
+              incrementValueBy = beatsPerMinuteViewModel::incrementValueBy
+            )
+            TappableButton(
+              text = stringResource(R.string.tap).toUpperCase(Locale.current),
+              onTap = beatsPerMinuteViewModel::onTap
+            )
+          }
+        }
+        Box(
+          Modifier
+            .fillMaxHeight()
+            .weight(1f),
+          contentAlignment = Alignment.Center
+        ) {
+          Column(
+            Modifier
+              .fillMaxHeight()
+              .padding(20.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.CenterHorizontally
+          ) {
+            Spacer(
+              Modifier.padding(20.dp)
+            )
+            SubdivisionsContent(
+              divisions = subdivisions,
+              incrementItemValueBy = subdivisionsViewModel::incrementItemValueBy
+            )
+            TappableButton(
+              text = stringResource(if (playing) R.string.stop else R.string.start)
+                .toUpperCase(Locale.current),
+              onTap = playButtonViewModel::onClick
+            )
+          }
+        }
+      }
+    }
   }
 }
 
