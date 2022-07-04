@@ -115,6 +115,9 @@ class MetronomeActivity : ComponentActivity() {
   override fun onPause() {
     saveState()
 
+    // The metronome stops when we pause, so reflect that in the Play button.
+    playButtonViewModel.stop()
+
     super.onPause()
   }
 
@@ -318,6 +321,10 @@ class PlayButtonViewModel : ViewModel() {
 
   fun onClick() {
     _playing.value = _playing.value?.let { !it } ?: false
+  }
+
+  fun stop() {
+    _playing.value = false
   }
 }
 
