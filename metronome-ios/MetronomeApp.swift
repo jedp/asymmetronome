@@ -10,6 +10,8 @@ import SwiftUI
 @main
 struct metronomeApp: App {
     
+    @Environment(\.scenePhase) private var scenePhase
+    
     private var metronomeModel: MetronomeModel
     private var metronomeViewModel: MetronomeViewModel
     private var metronomePlayer: MetronomePlayer
@@ -25,6 +27,9 @@ struct metronomeApp: App {
             MetronomeView(metronome: metronomeViewModel)
                 .onAppear {
                     metronomePlayer.start()
+                }
+                .onChange(of: scenePhase) { phase in
+                    UIApplication.shared.isIdleTimerDisabled = (phase == .active)
                 }
         }
     }
