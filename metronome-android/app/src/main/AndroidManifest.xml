@@ -16,7 +16,7 @@
     <activity
         android:name=".MetronomeActivity"
         android:exported="true"
-        android:screenOrientation="portrait"
+        android:screenOrientation="sensorPortrait"
         android:theme="@style/Theme.Metronome">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
