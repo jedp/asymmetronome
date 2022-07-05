@@ -2,6 +2,8 @@
 
 Asymmetric metronome.
 
+[<img alt="Download for iPhone" src="download-on-the-app-store.svg"/>](https://apps.apple.com/us/app/asymmetronome/id1632708968)
+
 ## Features
 
 - Tap to set tempo.
