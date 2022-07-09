@@ -42,15 +42,24 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.jedparsons.metronome.BeatsPerMinuteViewModel.Companion.DEFAULT_BPM
+import com.jedparsons.metronome.model.RhythmModel
+import com.jedparsons.metronome.model.RhythmModel.Companion.DEFAULT_DIVISIONS
 import com.jedparsons.metronome.player.MetronomePlayer
+import com.jedparsons.metronome.storage.RhythmStore
+import com.jedparsons.metronome.storage.SharedPrefsRhythmStore
 import com.jedparsons.metronome.ui.theme.Amber
 import com.jedparsons.metronome.ui.theme.DarkAmber
 import com.jedparsons.metronome.ui.theme.MetronomeTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.Timer
 import java.util.TimerTask
 
 class MetronomeActivity : ComponentActivity() {
 
+  private val mainScope: CoroutineScope by lazy { CoroutineScope(Dispatchers.Main) }
+  private val rhythmStore: RhythmStore by lazy { SharedPrefsRhythmStore(this) }
   private val beatsPerMinuteViewModel: BeatsPerMinuteViewModel by viewModels()
   private val playButtonViewModel: PlayButtonViewModel by viewModels()
   private val subdivisionsViewModel: SubdivisionsViewModel by viewModels()
@@ -64,7 +73,6 @@ class MetronomeActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-
 
     setContent {
       MetronomeTheme {
@@ -131,33 +139,26 @@ class MetronomeActivity : ComponentActivity() {
   }
 
   private fun saveState() {
-    // Stash bpm and divisions in shared prefs. Easy peasy.
-    val sharedPref = getPreferences(MODE_PRIVATE)
-    with(sharedPref.edit()) {
-      putInt(BPM_KEY, beatsPerMinuteViewModel.bpm.value ?: DEFAULT_BPM)
-      // Serialize the list of ints to a string like "1,2,3".
-      putString(DIV_KEY, subdivisionsViewModel.values.value?.joinToString(",") ?: "1,0")
-      commit()
+    mainScope.launch {
+      rhythmStore.save(
+        RhythmModel(
+          bpm = beatsPerMinuteViewModel.bpm.value ?: DEFAULT_BPM,
+          divisions = subdivisionsViewModel.values.value ?: DEFAULT_DIVISIONS
+        )
+      )
     }
   }
 
   private fun restoreState() {
-    // Restore bpm and divisions from shared prefs.
-    val sharedPref = getPreferences(MODE_PRIVATE)
-    beatsPerMinuteViewModel.updateBPM(sharedPref.getInt(BPM_KEY, DEFAULT_BPM))
-    // Convert a string like "1,2,3" back to a list of ints.
-    subdivisionsViewModel.updateValues(
-      sharedPref.getString(DIV_KEY, "1,0")!!
-        .split(",")
-        .map { s -> s.toInt() }
-        .toList()
-    )
+    mainScope.launch {
+      val model = rhythmStore.load()
+      beatsPerMinuteViewModel.updateBPM(model.bpm)
+      subdivisionsViewModel.updateValues(model.divisions)
+    }
   }
 
   companion object {
     const val TAG = "MetronomeActivity"
-    const val BPM_KEY = "bpm"
-    const val DIV_KEY = "div"
   }
 }
 
