@@ -1,7 +1,6 @@
 package com.jedparsons.metronome.storage
 
-import android.app.Activity
-import android.content.Context.MODE_PRIVATE
+import android.content.SharedPreferences
 import com.jedparsons.metronome.model.RhythmModel
 import com.jedparsons.metronome.model.RhythmModel.Companion.DEFAULT_BPM
 import com.jedparsons.metronome.model.RhythmModel.Companion.DEFAULT_DIVISIONS
@@ -13,11 +12,9 @@ import kotlin.coroutines.CoroutineContext
  * [RhythmStore] backed by shared prefs.
  */
 class SharedPrefsRhythmStore(
-  activity: Activity,
+  private val sharedPrefs: SharedPreferences,
   private val context: CoroutineContext = Dispatchers.IO
 ) : RhythmStore {
-
-  private val sharedPrefs = activity.getPreferences(MODE_PRIVATE)
 
   companion object {
     const val BPM_KEY = "bpm"

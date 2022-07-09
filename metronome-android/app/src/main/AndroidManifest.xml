@@ -4,6 +4,7 @@
     package="com.jedparsons.metronome">
 
   <application
+      android:name=".MetronomeApplication"
       android:allowBackup="true"
       android:dataExtractionRules="@xml/data_extraction_rules"
       android:fullBackupContent="@xml/backup_rules"
@@ -14,7 +15,7 @@
       android:theme="@style/Theme.Metronome"
       tools:targetApi="31">
     <activity
-        android:name=".MetronomeActivity"
+        android:name=".ui.MetronomeActivity"
         android:exported="true"
         android:screenOrientation="sensor"
         android:theme="@style/Theme.Metronome">

@@ -1,4 +1,4 @@
-package com.jedparsons.metronome
+package com.jedparsons.metronome.ui
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.Dp
