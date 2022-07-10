@@ -33,5 +33,4 @@ class RealAppContainer(
   override val rhythmRepo: RhythmRepository by lazy {
     RhythmRepository(rhythmStore)
   }
-
 }

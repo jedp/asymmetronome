@@ -1,7 +1,10 @@
 package com.jedparsons.metronome.player
 
+import android.content.res.AssetManager
+import android.util.Log
 import com.jedparsons.metronome.repo.RhythmData.Updated
 import com.jedparsons.metronome.repo.RhythmRepository
+import com.jedparsons.metronome.ui.MetronomeActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -13,6 +16,7 @@ import java.util.TimerTask
  */
 class MetronomeController(
   private val repo: RhythmRepository,
+  private val assetManager: AssetManager,
   private val player: MetronomePlayer
 ) {
 
@@ -23,8 +27,8 @@ class MetronomeController(
   private var currentEmphasis = 0
   private var emphasis: List<Int> = listOf(1)
 
-  var bpm: Int = 120
-  var subdivisions: List<Int> = listOf(1)
+  private var bpm: Int = 120
+  private var subdivisions: List<Int> = listOf(1)
     set(value) {
       // Map the subdivisions from the view model to a list of 1s and 0s, one per each beat.
       // E.g. (4, 2, 3) -> (1, 0, 0, 0, 1, 0, 1, 0, 0)
@@ -40,9 +44,11 @@ class MetronomeController(
     }
 
   init {
+    System.loadLibrary("metronome")
+
     scope.launch {
       repo.playing.collect { play ->
-        if (play) start() else stop()
+        if (play) play() else stop()
       }
     }
 
@@ -56,7 +62,7 @@ class MetronomeController(
     }
   }
 
-  fun start() {
+  fun play() {
     if (timer != null) return
 
     stop()
@@ -68,6 +74,7 @@ class MetronomeController(
         val now = System.currentTimeMillis()
         if (now >= (60000 / bpm) + lastBeat) {
           player.triggerDownBeat()
+          println("tick")
           lastBeat = now
           if (currentEmphasis >= emphasis.size) {
             currentEmphasis = 0
@@ -82,6 +89,19 @@ class MetronomeController(
   fun stop() {
     timer?.cancel()
     timer = null
+  }
+
+  fun startService() {
+    player.setupAudioStream()
+    player.loadWavAssets(assetManager)
+    player.startAudioStream()
+    Log.i(MetronomeActivity.TAG, "Prepared audio stream")
+  }
+
+  fun stopService() {
+    player.teardownAudioStream()
+    player.unloadWavAssets()
+    Log.i(MetronomeActivity.TAG, "Cleaned up audio stream")
   }
 
   companion object {

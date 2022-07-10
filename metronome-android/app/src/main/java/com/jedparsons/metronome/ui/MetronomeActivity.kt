@@ -1,7 +1,6 @@
 package com.jedparsons.metronome.ui
 
 import android.os.Bundle
-import android.util.Log
 import android.view.WindowManager.LayoutParams
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -12,8 +11,6 @@ import androidx.compose.material.Surface
 import androidx.compose.ui.Modifier
 import com.jedparsons.metronome.AppContainer
 import com.jedparsons.metronome.MetronomeApplication
-import com.jedparsons.metronome.player.MetronomeController
-import com.jedparsons.metronome.player.MetronomePlayer
 import com.jedparsons.metronome.repo.RhythmData.Updated
 import com.jedparsons.metronome.ui.theme.MetronomeTheme
 import kotlinx.coroutines.launch
@@ -24,20 +21,12 @@ class MetronomeActivity : ComponentActivity() {
   private val playButtonViewModel: PlayButtonViewModel by viewModels()
   private val subdivisionsViewModel: SubdivisionsViewModel by viewModels()
 
-  private val metronomePlayer = MetronomePlayer()
-  private lateinit var metronomeController: MetronomeController
   private lateinit var app: AppContainer
-
-  init {
-    System.loadLibrary("metronome")
-  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
     app = (application as MetronomeApplication).appContainer
-
-    metronomeController = MetronomeController(app.rhythmRepo, metronomePlayer)
 
     setContent {
       MetronomeTheme {
@@ -77,15 +66,6 @@ class MetronomeActivity : ComponentActivity() {
     window.addFlags(LayoutParams.FLAG_KEEP_SCREEN_ON)
   }
 
-  override fun onStart() {
-    super.onStart()
-
-    metronomePlayer.setupAudioStream()
-    metronomePlayer.loadWavAssets(assets)
-    metronomePlayer.startAudioStream()
-    Log.i(TAG, "Prepared audio stream")
-  }
-
   override fun onResume() {
     super.onResume()
 
@@ -96,14 +76,6 @@ class MetronomeActivity : ComponentActivity() {
     saveState()
 
     super.onPause()
-  }
-
-  override fun onDestroy() {
-    super.onDestroy()
-
-    metronomePlayer.teardownAudioStream()
-    metronomePlayer.unloadWavAssets()
-    Log.i(TAG, "Cleaned up audio stream")
   }
 
   private fun saveState() {
