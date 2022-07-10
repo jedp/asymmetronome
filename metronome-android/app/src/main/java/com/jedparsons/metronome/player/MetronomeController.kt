@@ -15,12 +15,17 @@ import java.util.Timer
 import java.util.TimerTask
 
 /**
- * Drives native metronome according to bpm and subdivisions of the rhythm.
+ * A controller to drive the native metronome.
+ *
+ * Observes the [RhythmRepository] for updates to the meter and play/pause state.
+ *
+ * Subscribes to application lifecycle callbacks, which provide the hooks for starting and stopping
+ * the audio system.
  */
 class MetronomeController(
   private val repo: RhythmRepository,
   private val assetManager: AssetManager,
-): ActivityLifecycleCallbacks {
+) : ActivityLifecycleCallbacks {
 
   private val scope: CoroutineScope by lazy { CoroutineScope(Dispatchers.IO) }
   private val player: MetronomePlayer by lazy { MetronomePlayer() }
@@ -94,19 +99,6 @@ class MetronomeController(
     timer = null
   }
 
-  fun startService() {
-    player.setupAudioStream()
-    player.loadWavAssets(assetManager)
-    player.startAudioStream()
-    Log.i(MetronomeActivity.TAG, "Prepared audio stream")
-  }
-
-  fun stopService() {
-    player.teardownAudioStream()
-    player.unloadWavAssets()
-    Log.i(MetronomeActivity.TAG, "Cleaned up audio stream")
-  }
-
   override fun onActivityStarted(activity: Activity) = startService()
 
   override fun onActivityStopped(activity: Activity) = stopService()
@@ -120,6 +112,19 @@ class MetronomeController(
   override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
 
   override fun onActivityDestroyed(activity: Activity) = Unit
+
+  private fun startService() {
+    player.setupAudioStream()
+    player.loadWavAssets(assetManager)
+    player.startAudioStream()
+    Log.i(MetronomeActivity.TAG, "Prepared audio stream")
+  }
+
+  private fun stopService() {
+    player.teardownAudioStream()
+    player.unloadWavAssets()
+    Log.i(MetronomeActivity.TAG, "Cleaned up audio stream")
+  }
 
   companion object {
     const val MAX_GAIN = 1.8f

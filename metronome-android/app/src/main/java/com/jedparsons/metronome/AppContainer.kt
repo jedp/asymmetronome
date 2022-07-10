@@ -9,6 +9,9 @@ import com.jedparsons.metronome.storage.SharedPrefsRhythmStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
+/**
+ * Dependency injection.
+ */
 interface AppContainer {
   val mainScope: CoroutineScope
   val rhythmRepo: RhythmRepository

@@ -7,6 +7,11 @@ import com.jedparsons.metronome.storage.RhythmStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
+/**
+ * Interface for observing and modifying all state.
+ *
+ * Doesn't save until you call [save], so do that when your livecycle ends.
+ */
 class RhythmRepository(
   private val rhythmStore: RhythmStore
 ) {
@@ -14,7 +19,10 @@ class RhythmRepository(
   private val _rhythm = MutableStateFlow<RhythmData>(Loading)
   private val _playing = MutableStateFlow(false)
 
+  /** Current Play/pause state. */
   val playing: StateFlow<Boolean> = _playing
+
+  /** Current rhythm. */
   val rhythm: StateFlow<RhythmData> = _rhythm
 
   suspend fun load() {
