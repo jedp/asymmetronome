@@ -1,6 +1,9 @@
 package com.jedparsons.metronome.player
 
+import android.app.Activity
+import android.app.Application.ActivityLifecycleCallbacks
 import android.content.res.AssetManager
+import android.os.Bundle
 import android.util.Log
 import com.jedparsons.metronome.repo.RhythmData.Updated
 import com.jedparsons.metronome.repo.RhythmRepository
@@ -17,10 +20,10 @@ import java.util.TimerTask
 class MetronomeController(
   private val repo: RhythmRepository,
   private val assetManager: AssetManager,
-  private val player: MetronomePlayer
-) {
+): ActivityLifecycleCallbacks {
 
   private val scope: CoroutineScope by lazy { CoroutineScope(Dispatchers.IO) }
+  private val player: MetronomePlayer by lazy { MetronomePlayer() }
 
   private var timer: Timer? = null
   private var lastBeat: Long = 0
@@ -103,6 +106,20 @@ class MetronomeController(
     player.unloadWavAssets()
     Log.i(MetronomeActivity.TAG, "Cleaned up audio stream")
   }
+
+  override fun onActivityStarted(activity: Activity) = startService()
+
+  override fun onActivityStopped(activity: Activity) = stopService()
+
+  override fun onActivityResumed(activity: Activity) = Unit
+
+  override fun onActivityPaused(activity: Activity) = Unit
+
+  override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit
+
+  override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
+
+  override fun onActivityDestroyed(activity: Activity) = Unit
 
   companion object {
     const val MAX_GAIN = 1.8f
