@@ -4,6 +4,8 @@ Asymmetric metronome.
 
 [<img alt="Download for iPhone" src="download-on-the-app-store.svg"/>](https://apps.apple.com/us/app/asymmetronome/id1632708968)
 
+[<img alt="Download for Android" src="google-play-badge.png"/>](https://play.google.com/store/apps/details?id=com.jedparsons.metronome)
+
 ## Features
 
 - Tap to set tempo.
