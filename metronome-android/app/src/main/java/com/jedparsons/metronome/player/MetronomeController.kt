@@ -8,8 +8,10 @@ import com.jedparsons.metronome.repo.RhythmRepository
 import com.jedparsons.metronome.util.MetronomeClock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import java.util.Timer
-import java.util.TimerTask
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.ScheduledThreadPoolExecutor
+import java.util.concurrent.TimeUnit.MILLISECONDS
 
 /**
  * A controller to drive the native metronome.
@@ -26,7 +28,9 @@ class MetronomeController(
   ioScope: CoroutineScope
 ) : ActivityLifecycleCallbacks {
 
-  private var timer: Timer? = null
+  private val executor: ScheduledExecutorService = ScheduledThreadPoolExecutor(1)
+  private var cancellableFuture: ScheduledFuture<*>? = null
+
   private var lastBeat: Long = 0
   private var currentEmphasis = 0
   private var emphasis: List<Int> = listOf(1)
@@ -56,31 +60,16 @@ class MetronomeController(
   }
 
   fun play() {
-    if (timer != null) return
+    if (cancellableFuture != null) return
 
-    stop()
-    val t = Timer()
-    timer = t
-    // Loop forever. On each iteration, see if it's time to play a beat, and with what emphasis.
-    t.schedule(object : TimerTask() {
-      override fun run() {
-        val now = clock.currentTimeMillis()
-        if (now >= (60000 / bpm) + lastBeat) {
-          player.playClick()
-          lastBeat = now
-          if (currentEmphasis >= emphasis.size) {
-            currentEmphasis = 0
-          }
-          player.setGain(if (emphasis[currentEmphasis] == 1) MAX_GAIN else LOW_GAIN)
-          currentEmphasis += 1
-        }
-      }
-    }, 0, 30)
+    cancellableFuture = executor.scheduleAtFixedRate(
+      runnable, 0, 30, MILLISECONDS
+    )
   }
 
   fun stop() {
-    timer?.cancel()
-    timer = null
+    cancellableFuture?.cancel(true)
+    cancellableFuture = null
   }
 
   override fun onActivityStarted(activity: Activity) {
@@ -100,6 +89,19 @@ class MetronomeController(
   override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
 
   override fun onActivityDestroyed(activity: Activity) = Unit
+
+  private val runnable = Runnable {
+    val now = clock.currentTimeMillis()
+    if (now >= (60000 / bpm) + lastBeat) {
+      player.playClick()
+      lastBeat = now
+      if (currentEmphasis >= emphasis.size) {
+        currentEmphasis = 0
+      }
+      player.setGain(if (emphasis[currentEmphasis] == 1) MAX_GAIN else LOW_GAIN)
+      currentEmphasis += 1
+    }
+  }
 
   companion object {
     const val MAX_GAIN = 1.8f
