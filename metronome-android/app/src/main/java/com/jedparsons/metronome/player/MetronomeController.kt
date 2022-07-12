@@ -2,14 +2,11 @@ package com.jedparsons.metronome.player
 
 import android.app.Activity
 import android.app.Application.ActivityLifecycleCallbacks
-import android.content.res.AssetManager
 import android.os.Bundle
-import android.util.Log
 import com.jedparsons.metronome.repo.RhythmData.Updated
 import com.jedparsons.metronome.repo.RhythmRepository
-import com.jedparsons.metronome.ui.MetronomeActivity
+import com.jedparsons.metronome.util.MetronomeClock
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.Timer
 import java.util.TimerTask
@@ -23,12 +20,11 @@ import java.util.TimerTask
  * the audio system.
  */
 class MetronomeController(
-  private val repo: RhythmRepository,
-  private val assetManager: AssetManager,
+  private val rhythmRepository: RhythmRepository,
+  private val clock: MetronomeClock,
+  private val player: MetronomePlayer,
+  ioScope: CoroutineScope
 ) : ActivityLifecycleCallbacks {
-
-  private val scope: CoroutineScope by lazy { CoroutineScope(Dispatchers.IO) }
-  private val player: MetronomePlayer by lazy { MetronomePlayer() }
 
   private var timer: Timer? = null
   private var lastBeat: Long = 0
@@ -38,30 +34,19 @@ class MetronomeController(
   private var bpm: Int = 120
   private var subdivisions: List<Int> = listOf(1)
     set(value) {
-      // Map the subdivisions from the view model to a list of 1s and 0s, one per each beat.
-      // E.g. (4, 2, 3) -> (1, 0, 0, 0, 1, 0, 1, 0, 0)
-      // We'll just loop through this processed list when setting the gain for each beat.
       field = value
-      emphasis = field
-        .filter { it > 0 }
-        .map { v ->
-          mutableListOf(1).apply {
-            repeat(v - 1) { this += 0 }
-          }
-        }.flatten()
+      emphasis = field.toEmphasisPattern()
     }
 
   init {
-    System.loadLibrary("metronome")
-
-    scope.launch {
-      repo.playing.collect { play ->
+    ioScope.launch {
+      rhythmRepository.playing.collect { play ->
         if (play) play() else stop()
       }
     }
 
-    scope.launch {
-      repo.rhythm.collect { rhythm ->
+    ioScope.launch {
+      rhythmRepository.rhythm.collect { rhythm ->
         (rhythm as? Updated)?.let { data ->
           bpm = data.rhythmModel.bpm
           subdivisions = data.rhythmModel.divisions
@@ -79,10 +64,9 @@ class MetronomeController(
     // Loop forever. On each iteration, see if it's time to play a beat, and with what emphasis.
     t.schedule(object : TimerTask() {
       override fun run() {
-        val now = System.currentTimeMillis()
+        val now = clock.currentTimeMillis()
         if (now >= (60000 / bpm) + lastBeat) {
-          player.triggerDownBeat()
-          println("tick")
+          player.playClick()
           lastBeat = now
           if (currentEmphasis >= emphasis.size) {
             currentEmphasis = 0
@@ -99,9 +83,13 @@ class MetronomeController(
     timer = null
   }
 
-  override fun onActivityStarted(activity: Activity) = startService()
+  override fun onActivityStarted(activity: Activity) {
+    player.setUp(activity.assets)
+  }
 
-  override fun onActivityStopped(activity: Activity) = stopService()
+  override fun onActivityStopped(activity: Activity) {
+    player.tearDown()
+  }
 
   override fun onActivityResumed(activity: Activity) = Unit
 
@@ -113,21 +101,22 @@ class MetronomeController(
 
   override fun onActivityDestroyed(activity: Activity) = Unit
 
-  private fun startService() {
-    player.setupAudioStream()
-    player.loadWavAssets(assetManager)
-    player.startAudioStream()
-    Log.i(MetronomeActivity.TAG, "Prepared audio stream")
-  }
-
-  private fun stopService() {
-    player.teardownAudioStream()
-    player.unloadWavAssets()
-    Log.i(MetronomeActivity.TAG, "Cleaned up audio stream")
-  }
-
   companion object {
     const val MAX_GAIN = 1.8f
     const val LOW_GAIN = 0.4f
   }
 }
+
+/**
+ * Map the subdivisions from the view model to a list of 1s and 0s, one per each beat.
+ * E.g. (4, 2, 3) -> (1, 0, 0, 0, 1, 0, 1, 0, 0)
+ *
+ * We'll just loop through this processed list when setting the gain for each beat.
+ */
+
+fun List<Int>.toEmphasisPattern() = this.filter { it > 0 }
+  .map { v ->
+    mutableListOf(1).apply {
+      repeat(v - 1) { this += 0 }
+    }
+  }.flatten()

@@ -23,7 +23,7 @@ using namespace parselib;
 
 static SimpleMultiPlayer player;
 
-JNIEXPORT void JNICALL Java_com_jedparsons_metronome_player_MetronomePlayer_setupAudioStreamNative(
+JNIEXPORT void JNICALL Java_com_jedparsons_metronome_player_RealMetronomePlayer_setupAudioStreamNative(
         JNIEnv* env, jobject thiz, jint numChannels) {
     __android_log_print(ANDROID_LOG_INFO, TAG, "%s", "init()");
 
@@ -32,19 +32,19 @@ JNIEXPORT void JNICALL Java_com_jedparsons_metronome_player_MetronomePlayer_setu
 }
 
 JNIEXPORT void JNICALL
-Java_com_jedparsons_metronome_player_MetronomePlayer_startAudioStreamNative(
+Java_com_jedparsons_metronome_player_RealMetronomePlayer_startAudioStreamNative(
         JNIEnv *env, jobject thiz) {
     player.startStream();
 }
 
-JNIEXPORT void JNICALL Java_com_jedparsons_metronome_player_MetronomePlayer_teardownAudioStreamNative(JNIEnv* , jobject) {
+JNIEXPORT void JNICALL Java_com_jedparsons_metronome_player_RealMetronomePlayer_teardownAudioStreamNative(JNIEnv* , jobject) {
     __android_log_print(ANDROID_LOG_INFO, TAG, "%s", "deinit()");
 
     // Sample buffers are all 1-channel, 44.1k.
     player.teardownAudioStream();
 }
 
-JNIEXPORT jboolean JNICALL Java_com_jedparsons_metronome_player_MetronomePlayer_loadWavAssetNative(
+JNIEXPORT jboolean JNICALL Java_com_jedparsons_metronome_player_RealMetronomePlayer_loadWavAssetNative(
         JNIEnv* env, jobject, jbyteArray bytearray, jint channels) {
     float pan = 0.0f; // left:-1.0f < center:0.0f > right:1.0f
     int len = env->GetArrayLength (bytearray);
@@ -69,23 +69,23 @@ JNIEXPORT jboolean JNICALL Java_com_jedparsons_metronome_player_MetronomePlayer_
     return isFormatValid;
 }
 
-JNIEXPORT void JNICALL Java_com_jedparsons_metronome_player_MetronomePlayer_unloadWavAssetsNative(JNIEnv* env, jobject) {
+JNIEXPORT void JNICALL Java_com_jedparsons_metronome_player_RealMetronomePlayer_unloadWavAssetsNative(JNIEnv* env, jobject) {
     player.unloadSampleData();
 }
 
-JNIEXPORT void JNICALL Java_com_jedparsons_metronome_player_MetronomePlayer_trigger(JNIEnv* env, jobject) {
+JNIEXPORT void JNICALL Java_com_jedparsons_metronome_player_RealMetronomePlayer_trigger(JNIEnv* env, jobject) {
     player.triggerDown(0);
 }
 
-JNIEXPORT jboolean JNICALL Java_com_jedparsons_metronome_player_MetronomePlayer_getOutputReset(JNIEnv*, jobject) {
+JNIEXPORT jboolean JNICALL Java_com_jedparsons_metronome_player_RealMetronomePlayer_getOutputReset(JNIEnv*, jobject) {
     return player.getOutputReset();
 }
 
-JNIEXPORT void JNICALL Java_com_jedparsons_metronome_player_MetronomePlayer_clearOutputReset(JNIEnv*, jobject) {
+JNIEXPORT void JNICALL Java_com_jedparsons_metronome_player_RealMetronomePlayer_clearOutputReset(JNIEnv*, jobject) {
     player.clearOutputReset();
 }
 
-JNIEXPORT void JNICALL Java_com_jedparsons_metronome_player_MetronomePlayer_restartStream(JNIEnv*, jobject) {
+JNIEXPORT void JNICALL Java_com_jedparsons_metronome_player_RealMetronomePlayer_restartStream(JNIEnv*, jobject) {
     player.resetAll();
     if (player.openStream() && player.startStream()) {
         __android_log_print(ANDROID_LOG_INFO, TAG, "openStream successful");
@@ -94,7 +94,7 @@ JNIEXPORT void JNICALL Java_com_jedparsons_metronome_player_MetronomePlayer_rest
     }
 }
 
-JNIEXPORT void JNICALL Java_com_jedparsons_metronome_player_MetronomePlayer_setAudioGain(
+JNIEXPORT void JNICALL Java_com_jedparsons_metronome_player_RealMetronomePlayer_setAudioGain(
         JNIEnv *env, jobject thiz, jfloat gain) {
     player.setGain(0, gain);
 }

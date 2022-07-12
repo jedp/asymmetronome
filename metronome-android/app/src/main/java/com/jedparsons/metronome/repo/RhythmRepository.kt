@@ -25,20 +25,24 @@ class RhythmRepository(
   /** Current rhythm. */
   val rhythm: StateFlow<RhythmData> = _rhythm
 
+  /** Load the previously-saved rhythm data and emit it. */
   suspend fun load() {
     _rhythm.value = Updated(rhythmStore.load())
   }
 
+  /** Save the current rhythm data. */
   suspend fun save() {
     (_rhythm.value as? Updated)?.let {
       rhythmStore.save(it.rhythmModel)
     }
   }
 
+  /** Set the playing state. */
   fun setPlaying(playing: Boolean) {
     _playing.value = playing
   }
 
+  /** Set the tempo in beats per minute. */
   fun setBpm(bpm: Int) {
     (_rhythm.value as? Updated)?.let {
       _rhythm.value = Updated(
@@ -47,6 +51,7 @@ class RhythmRepository(
     }
   }
 
+  /** Set the metrical subdivisions. */
   fun setDivisions(divisions: List<Int>) {
     (_rhythm.value as? Updated)?.let {
       _rhythm.value = Updated(

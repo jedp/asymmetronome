@@ -2,20 +2,49 @@ package com.jedparsons.metronome.player
 
 import android.content.res.AssetManager
 import android.util.Log
+import androidx.annotation.FloatRange
+import com.jedparsons.metronome.ui.MetronomeActivity
 import java.io.IOException
 
-/**
- * Interface to native metronome player.
- */
-class MetronomePlayer {
+interface MetronomePlayer {
 
-  fun setupAudioStream() = setupAudioStreamNative(NUM_PLAY_CHANNELS)
+  /** Prepare the metronome player. Do this first. */
+  fun setUp(assetManager: AssetManager): Boolean
 
-  fun startAudioStream() = startAudioStreamNative()
+  /** Clean up after using the metronome player. Do this last. */
+  fun tearDown()
 
-  fun teardownAudioStream() = teardownAudioStreamNative()
+  /** Play the metronome sound. */
+  fun playClick()
 
-  fun loadWavAssets(assetMgr: AssetManager): Boolean {
+  /** Set the gain of the metronome. Legal values: 0.0 to 2.0. */
+  fun setGain(@FloatRange(from = 0.0, to = 2.0) gain: Float)
+}
+
+class RealMetronomePlayer : MetronomePlayer {
+
+  override fun setUp(assetManager: AssetManager): Boolean {
+    setupAudioStreamNative(NUM_PLAY_CHANNELS)
+    if (!loadWavAssets(assetManager)) {
+      teardownAudioStreamNative()
+      return false
+    }
+    startAudioStreamNative()
+    Log.i(MetronomeActivity.TAG, "Prepared audio stream")
+    return true
+  }
+
+  override fun tearDown() {
+    teardownAudioStreamNative()
+    unloadWavAssetsNative()
+    Log.i(MetronomeActivity.TAG, "Cleaned up audio stream")
+  }
+
+  override fun playClick() = trigger()
+
+  override fun setGain(@FloatRange(from = 0.0, to = 2.0) gain: Float) = setAudioGain(gain)
+
+  private fun loadWavAssets(assetMgr: AssetManager): Boolean {
     var returnVal = false
     try {
       val assetFD = assetMgr.openFd(WAV_ASSET)
@@ -32,12 +61,6 @@ class MetronomePlayer {
     Log.i(TAG, "Loaded $WAV_ASSET")
     return returnVal
   }
-
-  fun unloadWavAssets() = unloadWavAssetsNative()
-
-  fun triggerDownBeat() = trigger()
-
-  fun setGain(gain: Float) = setAudioGain(gain)
 
   private external fun setupAudioStreamNative(numChannels: Int)
   private external fun startAudioStreamNative()
