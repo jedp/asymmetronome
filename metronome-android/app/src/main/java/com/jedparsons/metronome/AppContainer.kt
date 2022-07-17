@@ -23,12 +23,14 @@ interface AppContainer {
   val player: RealMetronomePlayer
 }
 
+const val SHARED_PREFS = "metronome-prefs"
+
 class RealAppContainer(
   private val context: Context
 ) : AppContainer {
 
   private val sharedPrefs: SharedPreferences by lazy {
-    context.getSharedPreferences("metronome-prefs", MODE_PRIVATE)
+    context.getSharedPreferences(SHARED_PREFS, MODE_PRIVATE)
   }
 
   private val rhythmStore: RhythmStore by lazy {

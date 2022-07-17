@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.toUpperCase
@@ -280,6 +281,7 @@ fun BeatsPerMinuteContent(
           horizontalDragHandler.onDrag(offset)
         }
       }
+      .testTag("tag-bpm")
   ) {
     Text(
       text = beatsPerMinute.toString(),
@@ -298,14 +300,16 @@ fun TappableButton(
   onTap: () -> Unit
 ) {
   Box(
-    Modifier.pointerInput(Unit) {
-      forEachGesture {
-        awaitPointerEventScope {
-          awaitFirstDown()
-          onTap()
+    Modifier
+      .pointerInput(Unit) {
+        forEachGesture {
+          awaitPointerEventScope {
+            awaitFirstDown()
+            onTap()
+          }
         }
       }
-    },
+      .testTag("tag-tap-$text"),
     contentAlignment = Alignment.Center
   ) {
     Card(
@@ -339,6 +343,7 @@ fun SubdivisionsContent(
   incrementItemValueBy: (item: Int, newValue: Int) -> Unit
 ) {
   LazyRow(
+    Modifier.testTag("tag-subdivisions"),
     verticalAlignment = Alignment.CenterVertically
   ) {
     itemsIndexed(divisions) { i, beats ->
@@ -377,6 +382,7 @@ fun SubdivisionContent(
           onDrag(offset)
         }
       }
+      .testTag("tag-subdivision")
   ) {
     Text(
       text = beats.toString(),
