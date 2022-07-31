@@ -1,5 +1,6 @@
 package com.jedparsons.metronome.ui
 
+import android.content.res.Configuration.ORIENTATION_PORTRAIT
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -26,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.intl.Locale
@@ -174,7 +176,7 @@ fun MetronomeScreen(
   BoxWithConstraints(
     contentAlignment = Alignment.Center
   ) {
-    if (maxWidth < 500.dp) {
+    if (LocalConfiguration.current.orientation == ORIENTATION_PORTRAIT) {
       // Portrait: Single column.
       Column(
         Modifier.fillMaxHeight(),
