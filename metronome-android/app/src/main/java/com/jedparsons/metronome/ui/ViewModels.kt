@@ -174,7 +174,7 @@ fun MetronomeScreen(
   BoxWithConstraints(
     contentAlignment = Alignment.Center
   ) {
-    if (maxWidth < 400.dp) {
+    if (maxWidth < 500.dp) {
       // Portrait: Single column.
       Column(
         Modifier.fillMaxHeight(),
